@@ -31,5 +31,5 @@ class Mongodb:
         with self.connection:
             queue = []
             for every in range(1,6):
-                queue.append([self.coll_words.find()[every]['word'], self.coll_words.find()[every]['sentence'], self.coll_words.find()[every]['translate']])
+                queue.append([self.coll_words.find()[every]['word_id'], self.coll_words.find()[every]['word'], self.coll_words.find()[every]['sentence'], self.coll_words.find()[every]['translate']])
             return queue

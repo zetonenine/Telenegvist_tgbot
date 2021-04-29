@@ -19,7 +19,6 @@ import pyttsx3
 import soundfile as sf
 from config import TOKEN
 
-
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=TOKEN)
@@ -87,6 +86,9 @@ async def add_word(message: types.Message, state: FSMContext):
 async def start_pack(message: types.Message):
     await TestStates.pack_showing_state.set()
     await message.answer('Подготавливаем пак..')
+
+    global answers
+    answers = []
     global queue
     queue = mng.create_queue()
     que = queue[0]
@@ -101,7 +103,7 @@ async def stop_pack(message: types.Message, state: FSMContext):
 
 
 async def asker(message, que):
-    text = f'{que[1]}\nПеревод: {que[2]}'
+    text = f'{que[2]}\nПеревод: {que[3]}'
     await bot.send_message(message.from_user.id, text)
 
 
@@ -110,23 +112,22 @@ async def loop(message: types.Message):
     print(queue)
     ans = message.text
     que = queue[0]
-    if ans == que[0]:
-        await message.answer('Правильно!')
-        try:
-            del queue[0]
-            que = queue[0]
-            gen = asyncio.create_task(asker(message, que))
-            await asyncio.gather(gen)
-        except:
-            await message.answer('Молодец!')
+    if ans == que[1]:
+        await message.answer('Верно!')
+        obj = {"word_id": que[0], 'answer': True}
     else:
-        await message.answer('Неправильно, попробуй ещё..')
+        obj = {"word_id": que[0], 'answer': False}
+        await message.answer(f'Неверно :(\nПравильный ответ: {que[1]}')
+    answers.append(obj)
 
+    try:
+        del queue[0]
+        que = queue[0]
+        gen = asyncio.create_task(asker(message, que))
+        await asyncio.gather(gen)
 
-
-@dp.message_handler(commands=['check'])
-async def check(message: types.Message):
-    obj = db.check()
+    except:
+        await message.answer(f'Молодец! Пак закончен!')
 
 
 @dp.message_handler(content_types=['voice'])
@@ -153,7 +154,6 @@ async def voice_messages_resender(message: types.voice):
     # data, samplerate = sf.read(file_path)
     # sf.write('template/new_file222222.ogg', data, samplerate)
 
-
     # print()
     # print('__________________')
     # print(requests.get(f'https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}'))
@@ -166,8 +166,6 @@ async def voice_messages_resender(message: types.voice):
     # sf.write('new_file.wav', data, samplerate)
 
     await bot.send_message(message.from_user.id, 'о да')
-
-
 
 
 # def sound_catcher():
@@ -201,10 +199,5 @@ async def voice_messages_resender(message: types.voice):
 #     audio_content = recoq.record(audio_file, duration=7)
 
 
-
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
-
-
-
-

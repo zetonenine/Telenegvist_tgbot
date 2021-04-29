@@ -1,0 +1,166 @@
+
+
+
+БД под юзеров: users.db
+     users     vocab   english level(later)
+    ______|_________|_______________|___________
+    37545 |     120 |             3 |
+    64324 |      65 |             2 |
+
+
+БД под слова:
+     id         word                  sentence    level
+  _____|____________|_________________________|________|________
+     1 |       case |              Good ____! |      3 |        |
+     2 |        day |             What a ___! |      1 |        |
+     3 | additional | It's an __________ info |      4 |        |
+     4 |        May |       I was born in ___ |      1 |        |
+
+
+БД под актуальный список слов (maximum 40):
+        actual words    level of learn    next(priorities)    showing times   max shows/pack    right/pack
+    ________________|_________________|___________________|__________________|______________|_____________|
+               case |               5 |                   |                0 |            1 |             |
+                day |               3 |                   |                1 |            1 |             |     (6 if missed many times,
+         additional |               1 |                   |                1 |         6??? |        ???  |      if 2 times was right
+
+
+
+
+Стек слов:
+                                   ---> if True: level of learn +1, else: level of learn +0,
+ first to out  ^             ^
+               |             |
+               |  additional |      \
+               |       day   |       30 words pack
+               |      case   |      /
+               |  additional |
+               |             |
+  first to in  ^             ^     <--- 'additional', 'day', 'case', 'additional'
+
+
+
+
+БД под неактуальный список слов:
+       learned words
+    ________________|
+                    |
+                    |
+                    |
+
+
+
+
+                                                  maximum
+                     ________________________________/\_____________________________________
+                    |                                                                       |
+
+           1st level         2nd level         3rd level         4th level         5th level        completed (learned)
+    ________________|_________________|_________________|_________________|_________________|__________________________|
+                    |               3 |               1 |               2 |                 |                          |
+                    |               4 |                 |                 |                 |                          |
+                    |               7 |                 |                 |                 |                          |
+         |    |           ^  ^  |              ^  |              ^  |             ^  |  |             ^      ^
+         |    |           |  |  |              |  |              |  |             |  |  |             |      |
+         |    |___>____>__|  |  |____>____>____|  |____>____>____|  |____>____>___|  |  |______>______|      |
+         |                   |                                                       |                       |
+         |                   |__________<_______________<_______________<____________|                       |  completed (learned)
+         |                                                                                                   |
+         |___________________________________________________________________________________________________|
+
+
+1 - max/pack:     -  0 -
+2 - max/pack:     - 4 - 22%
+3 - max/pack:     - 3 - 40%
+4 - max/pack: 11  - 4 - 22%
+5 - max/pack:  6  - 16%
+
+count = 50
+
+7
+
+
+def carts():
+    while count != 50:
+        # 5 level
+        if len('5th level') >= 12:
+            for i in range(0, 6):
+                print('5th level'[i])
+                count = -1
+
+        # 4 level
+        if len('4th level') >= 14:
+            for i in range(0, 11):
+                print('4th level'[i])
+                count = -1
+
+        # 3 level
+        for i in range(0, 16):
+            print('3rd level'[i])
+            count = -1
+
+        # 2 level   <________________
+        for i in '2nd level'):       |
+            print(i)                 |
+            count = -1               |
+                                     |
+                                     |
+        # 1 level                    |
+        if '2nd level' != 5          |
+            print('new word')        |
+            count = -1               |
+        else:     ___________________|
+
+
+    print('Okey, we've done today')
+
+
+
+
+Уровень слов:
+
+1 - new word
+2 - max
+
+
+
+1 - 30 (15, 15, 00, 00, 00) - 15 -- 15
+       (00, 00, 15, 00, 00)
+2 - 30 (15, 15, 15, 00, 00) - 15 -- 30
+       (00, 00, 15, 15, 00)
+3 - 30 (08, 08, 15, 07, 00) -  8 -- 38
+       (00, 00, 08, 15, 07)
+4 - 30 (15, 15, 08, 07, 00) - 15 -- 53
+5 - 30 ()
+6 - 30 ()
+7 - 30 ()
+
+210 words
+
+
+
+
+
+
+
+
+    request________(loop)_________   stage 5
+                                |_   stage 4
+                                |_   stage 3
+                                |_   stage 2
+                                |_   stage 1
+
+
+
+db.users.insertMany([
+    {id: 3785492, learned: [], in_process: []},
+    {id: 6346343, learned: [], in_process: []},
+    {id: 1657352, learned: [], in_process: []}
+]);
+
+
+db.words.insertMany([
+    {word_id: 1, word: "day", sentence: "What a ___!", level: 1},
+    {word_id: 2, word: "case", sentence: "Good ____!", level: 3},
+])
+

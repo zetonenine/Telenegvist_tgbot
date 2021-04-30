@@ -8,7 +8,7 @@ from postgresql import Pstrgsqler
 from mongodb import Mongodb
 from time import sleep
 import asyncio
-# from redis import r
+from redis_file import Redis
 import os
 import requests
 import logging
@@ -27,6 +27,7 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 
 db = Pstrgsqler()
 mng = Mongodb()
+r = Redis()
 
 recoq = Recognizer()
 
@@ -89,9 +90,9 @@ async def start_pack(message: types.Message):
 
     global answers
     answers = []
-    global queue
-    queue = mng.create_queue()
-    que = queue[0]
+    pack_name = f'{message.from_user.id}_pack'
+    mng.create_queue(pack_name)
+    que = r.stack_access(pack_name)
     gen = asyncio.create_task(asker(message, que))
     await asyncio.gather(gen)
 
@@ -109,9 +110,9 @@ async def asker(message, que):
 
 @dp.message_handler(state=TestStates.pack_showing_state, content_types=['text'])
 async def loop(message: types.Message):
-    print(queue)
     ans = message.text
-    que = queue[0]
+    pack_name = f'{message.from_user.id}_pack'
+    que = r.stack_access(pack_name)
     if ans == que[1]:
         await message.answer('Верно!')
         obj = {"word_id": que[0], 'answer': True}
@@ -121,8 +122,7 @@ async def loop(message: types.Message):
     answers.append(obj)
 
     try:
-        del queue[0]
-        que = queue[0]
+        que = r.stack_access(pack_name)
         gen = asyncio.create_task(asker(message, que))
         await asyncio.gather(gen)
 

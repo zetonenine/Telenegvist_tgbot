@@ -76,7 +76,7 @@ async def add_word(message: types.Message, state: FSMContext):
     obj = message.text
     values = obj.split('=')
     if len(values) == 4:
-        mng.add_new_word(values)
+        mng.add_new_word_manualy(values)
         await message.answer('Добавил новое слово ' + values[0])
     else:
         await message.answer('Ошибка в формате ввода, попробуй ещё раз')
@@ -116,9 +116,10 @@ async def loop(message: types.Message):
     if ans == que[1]:
         await message.answer('Верно!')
         obj = {"word_id": que[0], 'answer': True}
+
     else:
-        obj = {"word_id": que[0], 'answer': False}
         await message.answer(f'Неверно :(\nПравильный ответ: {que[1]}')
+        obj = {"word_id": que[0], 'answer': False}
     answers.append(obj)
 
     try:

@@ -20,4 +20,7 @@ class Redis():
     def stack_access(self, user_id):
         return json.loads(self.conn.lpop(f'{user_id}_pack'))
 
+    def answers(self, user_id, queue):
+        self.conn.r
+
 

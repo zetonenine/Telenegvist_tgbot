@@ -20,7 +20,7 @@ class Redis:
 
         # print(self.conn.lrange(pack_name, 0, -1))
 
-    def stack_access(self, user_id):
+    def stack_queue(self, user_id):
         try:
             return json.loads(self.conn.lpop(f'{user_id}_pack'))
         except:

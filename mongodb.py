@@ -30,7 +30,8 @@ class Mongodb:
         with self.connection:
             queue = []
             available_words = []
-            ALL_AMOUNT_OF_WORD = 5
+            ALL_AMOUNT_OF_WORD = 1
+            start_level = 0
 
             in_process = Mongodb.get_data_in_proceess(self, user_id)[1]
 
@@ -41,12 +42,13 @@ class Mongodb:
 
             for i, j in available_words:
                 data = Mongodb.get_word_data_by_id(self, j)
-                queue.append([data['word_id'], data['word'], data['sentence'], data['translate'], i])
+                queue.append([data['word_id'], data['word'], data['sentence'], data['translate'], i, True])
+                # в конце 0 нужно, чтобы пометить что слово взято из тех, что юзер уже изучал - из in_process
 
             AMOUNT_OF_NEW_WORDS = ALL_AMOUNT_OF_WORD - len(available_words)
             words = self.coll_words.aggregate([{"$sample": {"size": AMOUNT_OF_NEW_WORDS}}])
             for each in words:
-                queue.append([each['word_id'], each['word'], each['sentence'], each['translate'], 1])
+                queue.append([each['word_id'], each['word'], each['sentence'], each['translate'], start_level])
             r.queue(user_id, queue)
 
             print(queue)
@@ -61,7 +63,8 @@ class Mongodb:
             for each in answers:
                 if each['lvl'] == 6:
                     learned.append(each['word_id'])
-                in_process[each['lvl'] - 1][f"{each['lvl']}_lvl"].append(each['word_id'])
+                else:
+                    in_process[each['lvl']-1][f"{each['lvl']}_lvl"].append(each['word_id'])
 
             self.coll_users.update_one({"id": user_id},
                                        {'$set':
@@ -89,6 +92,8 @@ class Mongodb:
     def get_data_in_proceess(self, user_id):
         with self.connection:
             data = self.coll_users.find_one({"id": user_id})
+
+            print(text)
             return data['learned'], data['in_process']
 
     def get_word_data_by_id(self, word_id):

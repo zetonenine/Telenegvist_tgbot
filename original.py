@@ -135,15 +135,47 @@ async def loop(message: types.Message, state: FSMContext):
 
     if ans == que[1]:
         await message.answer('Верно!')
-        que[4] += 1
-        print(que)
-        if que[4] == 2:
-            r.re_add_word(message.from_user.id, que)
-        else:
+
+        # Level: 0. Repeat - No. Уровень становится 6, позже перейдет в learned
+        if que[4] == 0:
+            obj = {"word_id": que[0], 'lvl': 6}
+            r.add_answer(user_id, obj)
+
+        # Level: 1. Repeat - Yes.
+        if que[4] == 1:
+            que[4] += 1
             obj = {"word_id": que[0], 'lvl': que[4]}
-            r.add_answer(message.from_user.id, obj)
+            r.re_add_word(message.from_user.id, que)
+
+        # Level: 2. Repeat - Yes. Добавлятся в стек снова для повторного изучения
+        elif que[4] == 2:
+            que[4] += 1
+            obj = {"word_id": que[0], 'lvl': que[4]}
+            r.add_answer(user_id, obj)
+
+        # Level: 3-5. Repeat - No. Если que[5] True, то уровень повышается. False - остаётся на том же месте
+        if len(que) > 5:
+
+            if que[5]:
+                que[4] += 1
+                obj = {"word_id": que[0], 'lvl': que[4]}
+
+            elif not que[5]:
+                obj = {"word_id": que[0], 'lvl': que[4]}
+
+            r.add_answer(user_id, obj)
+
     else:
         await message.answer(f'Неверно :(\nПравильный ответ: {que[1]}')
+
+        # Level: 0. Делает лвл'ом 1
+        if que[4] == 0:
+            que[4] += 1
+
+        # Проверка на 3-5 лвлы. Метка T/F может быть только у этих лвл'ов
+        if len(que) > 5 and que[5]:
+            que[5] = False
+
         r.re_add_word(message.from_user.id, que)
 
     try:

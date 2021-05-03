@@ -28,10 +28,10 @@ class Mongodb:
 
     def create_queue(self, user_id):
         with self.connection:
-            print(user_id)
             queue = []
-            for every in range(0, 3):
-                queue.append([self.coll_words.find()[every]['word_id'], self.coll_words.find()[every]['word'], self.coll_words.find()[every]['sentence'], self.coll_words.find()[every]['translate']])
+            words = self.coll_words.aggregate([{ "$sample": {"size": 3}}])
+            for each in words:
+                queue.append([each['word_id'], each['word'], each['sentence'], each['translate']])
             r.queue(user_id, queue)
             return queue
 

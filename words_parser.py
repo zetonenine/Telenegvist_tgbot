@@ -19,7 +19,7 @@ def parse_random_word(num):
     ex = re.split('[ ]', example)
 
     for index, mean in enumerate(ex):
-        if '[' in mean:
+        if '[' in mean or ']' in mean:
             unknown = ''
             for j in range(0, len(mean)-2):
                 unknown += '_'
@@ -32,7 +32,7 @@ def parse_random_word(num):
 
 def adding_db(num):
     data = parse_random_word(num)
-    return mng.auto_adding_words(data)
+    return mng.adding_words_automatically(data)
 
 
 def main(amount):

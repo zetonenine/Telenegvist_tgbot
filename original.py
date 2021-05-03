@@ -51,7 +51,7 @@ text_to_speach.getProperty('voice')
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
-    db.add_user(message.from_user.id)
+    mng.add_new_user(message.from_user.id)
     await message.reply('Привет, отправь войс')
 
     # db.create_words_tab()
@@ -76,7 +76,7 @@ async def add_word(message: types.Message, state: FSMContext):
     obj = message.text
     values = obj.split('=')
     if len(values) == 4:
-        mng.add_new_word_manualy(values)
+        mng.adding_word_manualy(values)
         await message.answer('Добавил новое слово ' + values[0])
     else:
         await message.answer('Ошибка в формате ввода, попробуй ещё раз')
@@ -88,11 +88,9 @@ async def start_pack(message: types.Message):
     await TestStates.pack_showing_state.set()
     await message.answer('Подготавливаем пак..')
 
-    global answers
-    answers = []
-    pack_name = f'{message.from_user.id}_pack'
-    mng.create_queue(pack_name)
-    que = r.stack_access(pack_name)
+    # pack_name = f'{message.from_user.id}_pack'
+    mng.create_queue(message.from_user.id)
+    que = r.stack_access(message.from_user.id)
     gen = asyncio.create_task(asker(message, que))
     await asyncio.gather(gen)
 
@@ -112,22 +110,24 @@ async def asker(message, que):
 async def loop(message: types.Message):
     ans = message.text
     pack_name = f'{message.from_user.id}_pack'
-    que = r.stack_access(pack_name)
+    que = r.stack_access(message.from_user.id)
+    r.check_queue(message.from_user.id)
+
     if ans == que[1]:
         await message.answer('Верно!')
         obj = {"word_id": que[0], 'answer': True}
-
+        r.add_answer(message.from_user.id, obj)
     else:
         await message.answer(f'Неверно :(\nПравильный ответ: {que[1]}')
-        obj = {"word_id": que[0], 'answer': False}
-    answers.append(obj)
+        r.re_add_word(message.from_user.id, que)
+        # obj = {"word_id": que[0], 'answer': False}
 
     try:
-        que = r.stack_access(pack_name)
+        que = r.stack_access(message.from_user.id)
         gen = asyncio.create_task(asker(message, que))
         await asyncio.gather(gen)
-
     except:
+        mng.changing_levels(message.from_user.id)
         await message.answer(f'Молодец! Пак закончен!')
 
 

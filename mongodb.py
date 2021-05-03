@@ -29,9 +29,10 @@ class Mongodb:
     def create_queue(self, user_id):
         with self.connection:
             queue = []
-            words = self.coll_words.aggregate([{ "$sample": {"size": 3}}])
+            AMOUNT_OF_WORD = 1
+            words = self.coll_words.aggregate([{"$sample": {"size": AMOUNT_OF_WORD}}])
             for each in words:
-                queue.append([each['word_id'], each['word'], each['sentence'], each['translate']])
+                queue.append([each['word_id'], each['word'], each['sentence'], each['translate'], 1])
             r.queue(user_id, queue)
             return queue
 
@@ -39,20 +40,21 @@ class Mongodb:
         with self.connection:
             answers = r.get_answers(user_id)
             print(answers)
-            for i in answers:
-                if i['answer'] == True:
-                    self.coll_users.insert_one({"id": user_id,
-                                                "learned": [],
-                                                "in_process":
-                                                    [{'1_lvl': []},
-                                                     {'2_lvl': []},
-                                                     {'3_lvl': []},
-                                                     {'4_lvl': []},
-                                                     {'5_lvl': []}
-                                                     ]
-                                                })
 
-            # self.coll_users.update_many({id: user_id}, {})
+            in_process = self.coll_users.find_one({"id": user_id})['in_process']
+            for each in answers:
+                in_process[each['lvl']-1][f"{each['lvl']}_lvl"].append(each['word_id'])
+
+            print(in_process)
+            self.coll_users.update_one({"id": user_id},
+                                       {'$set':
+                                            {"learned": [],
+                                            "in_process": in_process
+                                            }
+                                        }
+                                       )
+
+            print(self.coll_users.find_one({"id": user_id}))
 
     def adding_word_manualy(self, msg):
         with self.connection:

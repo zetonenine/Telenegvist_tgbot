@@ -92,12 +92,14 @@ async def start_pack(message: types.Message):
     mng.create_queue(message.from_user.id)
     que = r.stack_access(message.from_user.id)
     gen = asyncio.create_task(asker(message, que))
+    r.del_answers(message.from_user.id)
     await asyncio.gather(gen)
 
 
 @dp.message_handler(state=TestStates.pack_showing_state, commands=['stoppack'])
 async def stop_pack(message: types.Message, state: FSMContext):
     await state.reset_state()
+    mng.changing_levels(message.from_user.id)
     await message.answer('Заканчиваем пак')
 
 
@@ -107,20 +109,25 @@ async def asker(message, que):
 
 
 @dp.message_handler(state=TestStates.pack_showing_state, content_types=['text'])
-async def loop(message: types.Message):
+async def loop(message: types.Message, state: FSMContext):
     ans = message.text
+
     pack_name = f'{message.from_user.id}_pack'
     que = r.stack_access(message.from_user.id)
     r.check_queue(message.from_user.id)
 
     if ans == que[1]:
         await message.answer('Верно!')
-        obj = {"word_id": que[0], 'answer': True}
-        r.add_answer(message.from_user.id, obj)
+        que[4] += 1
+        print(que)
+        if que[4] == 2:
+            r.re_add_word(message.from_user.id, que)
+        else:
+            obj = {"word_id": que[0], 'lvl': que[4]}
+            r.add_answer(message.from_user.id, obj)
     else:
         await message.answer(f'Неверно :(\nПравильный ответ: {que[1]}')
         r.re_add_word(message.from_user.id, que)
-        # obj = {"word_id": que[0], 'answer': False}
 
     try:
         que = r.stack_access(message.from_user.id)
@@ -129,6 +136,7 @@ async def loop(message: types.Message):
     except:
         mng.changing_levels(message.from_user.id)
         await message.answer(f'Молодец! Пак закончен!')
+        await state.reset_state()
 
 
 @dp.message_handler(content_types=['voice'])

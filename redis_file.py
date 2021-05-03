@@ -18,7 +18,7 @@ class Redis:
             self.conn.rpush(pack_name, jason)
             self.conn.rpush(pack_name, jason) # добавляю дважды, потому что в основном коде пока приходится поп-ать дважды
 
-        print(self.conn.lrange(pack_name, 0, -1))
+        # print(self.conn.lrange(pack_name, 0, -1))
 
     def stack_access(self, user_id):
         try:
@@ -46,8 +46,10 @@ class Redis:
         data = self.conn.lrange(answers_name, 0, -1)
         for each in data:
             answers.append(json.loads(each))
-        r.delete(f'{user_id}_answers')
+        Redis.del_answers(user_id)
         return answers
 
-
+    @staticmethod
+    def del_answers(user_id):
+        return r.delete(f'{user_id}_answers')
 
